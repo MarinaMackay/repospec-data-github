@@ -4,6 +4,8 @@
 - Target SFT bootstrap examples: 1877
 - Distillation prompt examples: 1877
 - Message-only train/dev export: 1790 / 87
+- Curated v0 examples: 350
+- Curated v0 train/dev export: 332 / 18
 - File-level leakage check passed: True
 
 ## Per Repo

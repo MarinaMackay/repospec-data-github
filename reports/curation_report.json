@@ -1,0 +1,31 @@
+{
+  "source": "data/target_sft_train.bootstrap.jsonl",
+  "output": "data/target_sft_train.curated_v0.jsonl",
+  "input_rows": 1877,
+  "kept_rows": 350,
+  "train_rows": 332,
+  "dev_rows": 18,
+  "kept_by_repo": {
+    "xarray": 47,
+    "numba": 188,
+    "sphinx": 115
+  },
+  "train_by_repo": {
+    "xarray": 43,
+    "numba": 183,
+    "sphinx": 106
+  },
+  "dev_by_repo": {
+    "xarray": 4,
+    "numba": 5,
+    "sphinx": 9
+  },
+  "rejected_by_reason": {
+    "not_symbol_level": 1313,
+    "low_signal_path": 214
+  },
+  "notes": [
+    "curated_v0 is a stricter bootstrap subset, not a claim that the data is final paper-quality synthetic QA.",
+    "Use the same script on LLM-generated QA after generation to produce the formal experiment dataset."
+  ]
+}

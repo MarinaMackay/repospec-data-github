@@ -46,6 +46,9 @@
       "input": "data/target_sft_train.bootstrap.jsonl or filtered generated QA JSONL",
       "message_train_export": "training/target_sft_train.messages.jsonl",
       "message_dev_export": "training/target_sft_dev.messages.jsonl",
+      "curated_input": "data/target_sft_train.curated_v0.jsonl",
+      "curated_message_train_export": "training/target_sft_curated_train.messages.jsonl",
+      "curated_message_dev_export": "training/target_sft_curated_dev.messages.jsonl",
       "loss": "assistant_only"
     },
     "stage_2": {

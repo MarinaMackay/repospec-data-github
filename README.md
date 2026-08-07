@@ -21,16 +21,23 @@ The package covers three SWE-QA-Pro pilot repositories:
 - `data/target_sft_train.bootstrap.jsonl`  
   Annotated Stage 1 target-LoRA SFT bootstrap data, including evidence metadata.
 
+- `data/target_sft_train.curated_v0.jsonl`  
+  Stricter formal-experiment candidate subset filtered from the bootstrap data.
+
 - `data/distill_prompts.pending_teacher.jsonl`  
   Stage 2 prompts for target-policy distillation. These are waiting for target+repo-LoRA teacher outputs.
 
 - `training/target_sft_train.messages.jsonl` and `training/target_sft_dev.messages.jsonl`  
   Chat-style SFT exports for training code that only wants `messages`.
 
+- `training/target_sft_curated_train.messages.jsonl` and `training/target_sft_curated_dev.messages.jsonl`  
+  Message-only exports for the curated subset.
+
 ### Scripts
 
 - `scripts/build_pilot_data.py` rebuilds the pilot data from local official sources.
 - `scripts/export_training_files.py` writes the train/dev message-only SFT files.
+- `scripts/curate_publication_qa.py` filters QA into the stricter `curated_v0` subset.
 - `scripts/validate_pilot_data.py` checks counts, schema-critical fields, loss mask metadata, and leakage.
 - `scripts/filter_generated_qa.py` filters future LLM-generated QA into the target SFT schema.
 - `scripts/materialize_teacher_sequences.py` materializes Stage 2 teacher sequences after target LoRA adapters exist.
@@ -59,6 +66,9 @@ target_sft_train_rows=1877
 distill_prompt_rows=1877
 message_train_rows=1790
 message_dev_rows=87
+curated_rows=350
+curated_message_train_rows=332
+curated_message_dev_rows=18
 ```
 
 Run it again:
@@ -69,6 +79,6 @@ python3 scripts/validate_pilot_data.py
 
 ## Boundary
 
-This is ready for Stage 1 training smoke tests and adapter-pipeline integration. For paper numbers, the bootstrap QA should be replaced or augmented with LLM-generated QA using the same split/filtering rules.
+This is ready for Stage 1 training smoke tests and adapter-pipeline integration. The `curated_v0` subset is a stricter candidate for formal experiments, but final paper runs should still replace or augment it with LLM-generated QA using the same split/filtering rules.
 
 Actual Stage 2 teacher logits, hidden states, or DFlash cache cannot be included until target+repo-LoRA adapters are trained and frozen.

@@ -13,7 +13,10 @@
     "target_sft_train_examples": 1877,
     "distill_prompt_examples": 1877,
     "message_train_examples": 1790,
-    "message_dev_examples": 87
+    "message_dev_examples": 87,
+    "curated_v0_examples": 350,
+    "curated_v0_train_examples": 332,
+    "curated_v0_dev_examples": 18
   },
   "leakage_check": {
     "policy": "train evidence files must not overlap extracted official eval evidence files",

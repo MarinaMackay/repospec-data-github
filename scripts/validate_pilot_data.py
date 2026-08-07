@@ -43,7 +43,10 @@ def main() -> None:
         PACKAGE_DIR / "reports/official_sft_trajectories_report.json",
         PACKAGE_DIR / "training/target_sft_train.messages.jsonl",
         PACKAGE_DIR / "training/target_sft_dev.messages.jsonl",
+        PACKAGE_DIR / "training/target_sft_curated_train.messages.jsonl",
+        PACKAGE_DIR / "training/target_sft_curated_dev.messages.jsonl",
         PACKAGE_DIR / "reports/training_export_report.json",
+        PACKAGE_DIR / "reports/curation_report.json",
     ]
     for path in required_files:
         require(path.exists(), f"required package file missing: {path}")
@@ -54,12 +57,20 @@ def main() -> None:
     distill_rows = load_jsonl(DATA_DIR / "distill_prompts.pending_teacher.jsonl")
     training_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_train.messages.jsonl")
     dev_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_dev.messages.jsonl")
+    curated_rows = load_jsonl(DATA_DIR / "target_sft_train.curated_v0.jsonl")
+    curated_train_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_curated_train.messages.jsonl")
+    curated_dev_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_curated_dev.messages.jsonl")
     sft_report = json.loads((PACKAGE_DIR / "reports/official_sft_trajectories_report.json").read_text(encoding="utf-8"))
 
     require(len(eval_rows) == 30, f"expected 30 official eval rows, got {len(eval_rows)}")
     require(len(train_rows) > 0, "target SFT train data is empty")
     require(len(distill_rows) == len(train_rows), "distillation prompts must match train rows")
     require(len(training_rows) + len(dev_rows) == len(train_rows), "train/dev exports must cover all SFT rows")
+    require(len(curated_rows) > 0, "curated QA data is empty")
+    require(
+        len(curated_train_rows) + len(curated_dev_rows) == len(curated_rows),
+        "curated train/dev exports must cover all curated rows",
+    )
 
     required_train_keys = {
         "repo",
@@ -109,6 +120,14 @@ def main() -> None:
         require(row["loss_on"] == "assistant_only", f"export row {idx} has wrong loss mask")
         require(row["messages"][-1]["role"] == "assistant", f"export row {idx} final message is not assistant")
 
+    for idx, row in enumerate(curated_rows):
+        require(row.get("curation", {}).get("tier") == "curated_v0", f"curated row {idx} missing tier")
+        require(":symbol:" in row["question_id"], f"curated row {idx} is not symbol-level")
+        require("Its docstring says:" in row["answer"], f"curated row {idx} is not docstring-grounded")
+
+    for idx, row in enumerate(curated_train_rows + curated_dev_rows):
+        require(row.get("curation_tier") == "curated_v0", f"curated export row {idx} missing tier")
+
     require(sft_report["row_count"] == 1000, "official SFT trajectories report should show 1000 rows")
     require(
         all(v == 0 for v in sft_report["pilot_repo_exact_basename_counts"].values()),
@@ -121,6 +140,9 @@ def main() -> None:
     print(f"distill_prompt_rows={len(distill_rows)}")
     print(f"message_train_rows={len(training_rows)}")
     print(f"message_dev_rows={len(dev_rows)}")
+    print(f"curated_rows={len(curated_rows)}")
+    print(f"curated_message_train_rows={len(curated_train_rows)}")
+    print(f"curated_message_dev_rows={len(curated_dev_rows)}")
 
 
 if __name__ == "__main__":
