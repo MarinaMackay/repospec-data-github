@@ -44,6 +44,8 @@
     "stage_1": {
       "consumer": "target model LoRA trainer",
       "input": "data/target_sft_train.bootstrap.jsonl or filtered generated QA JSONL",
+      "message_train_export": "training/target_sft_train.messages.jsonl",
+      "message_dev_export": "training/target_sft_dev.messages.jsonl",
       "loss": "assistant_only"
     },
     "stage_2": {

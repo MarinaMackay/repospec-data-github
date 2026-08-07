@@ -15,7 +15,8 @@ It is designed for the revised two-stage training plan:
 - `data/pilot_split_manifest.json`: source repo commits, local paths, eval evidence files, training file counts, and leakage policy.
 - `data/target_sft_train.bootstrap.jsonl`: deterministic Stage 1 bootstrap SFT data from pinned repo source.
 - `data/distill_prompts.pending_teacher.jsonl`: Stage 2 prompts awaiting target+LoRA teacher materialization.
-- `data/teacher_sequences.dry_run.jsonl`: a 3-row dry-run example proving the materialization script interface.
+- `training/target_sft_train.messages.jsonl`: message-only Stage 1 train export.
+- `training/target_sft_dev.messages.jsonl`: message-only Stage 1 dev export.
 
 ## Source Data
 
@@ -29,7 +30,9 @@ It is designed for the revised two-stage training plan:
 
 ## Intended Use
 
-Use `target_sft_train.bootstrap.jsonl` to smoke-test Stage 1 target LoRA training and data loaders.
+Use `training/target_sft_train.messages.jsonl` and `training/target_sft_dev.messages.jsonl` for a first target-LoRA SFT run.
+
+Use `data/target_sft_train.bootstrap.jsonl` if the training code wants evidence metadata.
 
 Use `distill_prompts.pending_teacher.jsonl` to materialize Stage 2 teacher data after target LoRA adapters are trained and frozen.
 
@@ -41,7 +44,7 @@ Do not use official eval rows for training.
 
 Do not train the draft directly against Claude/gold answers as the final Stage 2 objective.
 
-Do not treat `teacher_sequences.dry_run.jsonl` as real teacher data. It is a CLI/interface test artifact only.
+Do not treat `distill_prompts.pending_teacher.jsonl` as completed teacher data. It is the input to teacher materialization.
 
 ## Leakage Controls
 
@@ -53,12 +56,12 @@ Important limitation: SWE-QA-Pro Bench does not publish structured evidence fiel
 
 - Official eval examples: 30
 - Stage 1 target SFT bootstrap examples: 1877
+- Message-only train/dev export: 1790 / 87
 - Stage 2 distillation prompts: 1877
 - File-level leakage overlap over extracted evidence files: 0
 
 ## Known Limitations
 
-The Stage 1 bootstrap data is deterministic and grounded, but not publication-quality synthetic QA. For paper results, generate richer QA with the agreed LLM generator using `prompts/repo_qa_generation_prompt.md`, then filter it through `scripts/filter_generated_qa.py`.
+The Stage 1 bootstrap data is deterministic and grounded, but it is not the final publication dataset. For paper results, generate richer QA with the agreed LLM generator using `prompts/repo_qa_generation_prompt.md`, then filter it through `scripts/filter_generated_qa.py`.
 
 Actual Stage 2 teacher logits/hidden states/DFlash cache are not included because they require trained/frozen target LoRA adapters and the exact DFlash format.
-

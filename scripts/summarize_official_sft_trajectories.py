@@ -4,14 +4,16 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import Counter
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[3]
-IN_PATH = ROOT / "work/raw/SWE-QA-Pro-SFT-Trajectories/train.jsonl"
-OUT_PATH = ROOT / "outputs/repo_spec_data_package/reports/official_sft_trajectories_report.json"
+PACKAGE_DIR = Path(__file__).resolve().parents[1]
+WORK_ROOT = Path(os.environ.get("REPOSPEC_WORK_ROOT", PACKAGE_DIR))
+IN_PATH = Path(os.environ.get("SWE_QA_PRO_SFT_TRAJECTORIES", WORK_ROOT / "work/raw/SWE-QA-Pro-SFT-Trajectories/train.jsonl"))
+OUT_PATH = PACKAGE_DIR / "reports/official_sft_trajectories_report.json"
 PATH_RE = re.compile(r"Repository Path:\s*([^\n]+)")
 
 
@@ -48,7 +50,7 @@ def main() -> None:
 
     report = {
         "source": "TIGER-Lab/SWE-QA-Pro-SFT-Trajectories",
-        "local_path": str(IN_PATH.relative_to(ROOT)),
+        "local_path": str(IN_PATH),
         "row_count": row_count,
         "first_shape": first_shape,
         "message_role_counts": dict(role_counts),

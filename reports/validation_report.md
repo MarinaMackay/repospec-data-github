@@ -3,6 +3,7 @@
 - Official eval examples: 30
 - Target SFT bootstrap examples: 1877
 - Distillation prompt examples: 1877
+- Message-only train/dev export: 1790 / 87
 - File-level leakage check passed: True
 
 ## Per Repo

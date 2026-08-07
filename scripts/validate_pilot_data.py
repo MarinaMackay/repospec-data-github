@@ -41,6 +41,9 @@ def main() -> None:
         PACKAGE_DIR / "prompts/repo_qa_generation_prompt.md",
         PACKAGE_DIR / "prompts/teacher_distillation_contract.md",
         PACKAGE_DIR / "reports/official_sft_trajectories_report.json",
+        PACKAGE_DIR / "training/target_sft_train.messages.jsonl",
+        PACKAGE_DIR / "training/target_sft_dev.messages.jsonl",
+        PACKAGE_DIR / "reports/training_export_report.json",
     ]
     for path in required_files:
         require(path.exists(), f"required package file missing: {path}")
@@ -49,11 +52,14 @@ def main() -> None:
     eval_rows = load_jsonl(DATA_DIR / "pilot_eval.official_sweqapro.jsonl")
     train_rows = load_jsonl(DATA_DIR / "target_sft_train.bootstrap.jsonl")
     distill_rows = load_jsonl(DATA_DIR / "distill_prompts.pending_teacher.jsonl")
+    training_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_train.messages.jsonl")
+    dev_rows = load_jsonl(PACKAGE_DIR / "training/target_sft_dev.messages.jsonl")
     sft_report = json.loads((PACKAGE_DIR / "reports/official_sft_trajectories_report.json").read_text(encoding="utf-8"))
 
     require(len(eval_rows) == 30, f"expected 30 official eval rows, got {len(eval_rows)}")
     require(len(train_rows) > 0, "target SFT train data is empty")
     require(len(distill_rows) == len(train_rows), "distillation prompts must match train rows")
+    require(len(training_rows) + len(dev_rows) == len(train_rows), "train/dev exports must cover all SFT rows")
 
     required_train_keys = {
         "repo",
@@ -98,6 +104,11 @@ def main() -> None:
             f"distill row {idx} should mark teacher data dependency",
         )
 
+    for idx, row in enumerate(training_rows + dev_rows):
+        require(set(row.keys()) == {"messages", "repo_id", "question_id", "loss_on"}, f"export row {idx} has unexpected keys")
+        require(row["loss_on"] == "assistant_only", f"export row {idx} has wrong loss mask")
+        require(row["messages"][-1]["role"] == "assistant", f"export row {idx} final message is not assistant")
+
     require(sft_report["row_count"] == 1000, "official SFT trajectories report should show 1000 rows")
     require(
         all(v == 0 for v in sft_report["pilot_repo_exact_basename_counts"].values()),
@@ -108,6 +119,8 @@ def main() -> None:
     print(f"official_eval_rows={len(eval_rows)}")
     print(f"target_sft_train_rows={len(train_rows)}")
     print(f"distill_prompt_rows={len(distill_rows)}")
+    print(f"message_train_rows={len(training_rows)}")
+    print(f"message_dev_rows={len(dev_rows)}")
 
 
 if __name__ == "__main__":

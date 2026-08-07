@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
 """Build the RepoSpec pilot data package from local SWE-QA-Pro assets.
 
-Inputs expected under the workspace:
+By default, inputs are expected under ./work/raw in this repository:
 - work/raw/SWE-QA-Pro-Bench/data/test.jsonl
 - work/raw/SWE-QA-Pro/eval/repos.txt
 - work/raw/repos/{xarray,numba,sphinx} checked out at benchmark commits
 
-Outputs are written under outputs/repo_spec_data_package/data and reports.
+Set REPOSPEC_WORK_ROOT to point at another workspace containing work/raw.
+Outputs are written to this repository's data/ and reports/ directories.
 """
 
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
+import os
 import re
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[3]
-BENCH_PATH = ROOT / "work/raw/SWE-QA-Pro-Bench/data/test.jsonl"
-REPOS_TXT = ROOT / "work/raw/SWE-QA-Pro/eval/repos.txt"
-REPO_ROOT = ROOT / "work/raw/repos"
-OUT_DIR = ROOT / "outputs/repo_spec_data_package/data"
-REPORT_DIR = ROOT / "outputs/repo_spec_data_package/reports"
+PACKAGE_DIR = Path(__file__).resolve().parents[1]
+WORK_ROOT = Path(os.environ.get("REPOSPEC_WORK_ROOT", PACKAGE_DIR))
+BENCH_PATH = Path(os.environ.get("SWE_QA_PRO_BENCH", WORK_ROOT / "work/raw/SWE-QA-Pro-Bench/data/test.jsonl"))
+REPOS_TXT = Path(os.environ.get("SWE_QA_PRO_REPOS_TXT", WORK_ROOT / "work/raw/SWE-QA-Pro/eval/repos.txt"))
+REPO_ROOT = Path(os.environ.get("REPOSPEC_REPO_ROOT", WORK_ROOT / "work/raw/repos"))
+OUT_DIR = PACKAGE_DIR / "data"
+REPORT_DIR = PACKAGE_DIR / "reports"
+TRAINING_DIR = PACKAGE_DIR / "training"
 
 PILOT_REPOS = {
     "pydata/xarray": {
@@ -108,6 +114,16 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
             if line.strip():
                 rows.append(json.loads(line))
     return rows
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(PACKAGE_DIR))
+    except ValueError:
+        try:
+            return str(path.relative_to(WORK_ROOT))
+        except ValueError:
+            return str(path)
 
 
 def load_repo_commits() -> dict[str, str]:
@@ -342,6 +358,44 @@ def make_distill_prompts(stage1_rows: list[dict[str, Any]]) -> list[dict[str, An
     return prompts
 
 
+def dev_bucket(row: dict[str, Any]) -> bool:
+    key = f"{row['repo_id']}::{row['question_id']}".encode("utf-8")
+    return int(hashlib.sha1(key).hexdigest(), 16) % 20 == 0
+
+
+def write_training_exports(stage1_rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    train_rows = []
+    dev_rows = []
+    for row in stage1_rows:
+        exported = {
+            "messages": row["messages"],
+            "repo_id": row["repo_id"],
+            "question_id": row["question_id"],
+            "loss_on": "assistant_only",
+        }
+        if dev_bucket(row):
+            dev_rows.append(exported)
+        else:
+            train_rows.append(exported)
+
+    write_jsonl(TRAINING_DIR / "target_sft_train.messages.jsonl", train_rows)
+    write_jsonl(TRAINING_DIR / "target_sft_dev.messages.jsonl", dev_rows)
+    training_report = {
+        "source": "data/target_sft_train.bootstrap.jsonl",
+        "format": "chat messages JSONL with assistant-only loss expected by trainer",
+        "train_rows": len(train_rows),
+        "dev_rows": len(dev_rows),
+        "train_by_repo": dict(Counter(row["repo_id"] for row in train_rows)),
+        "dev_by_repo": dict(Counter(row["repo_id"] for row in dev_rows)),
+        "notes": [
+            "Use the bootstrap JSONL if the trainer wants evidence metadata.",
+            "Use these message files if the trainer expects chat-style SFT rows.",
+        ],
+    }
+    write_json(REPORT_DIR / "training_export_report.json", training_report)
+    return train_rows, dev_rows
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -376,7 +430,7 @@ def main() -> None:
 
     manifest: dict[str, Any] = {
         "source_benchmark": "TIGER-Lab/SWE-QA-Pro-Bench",
-        "source_repo_list": str(REPOS_TXT.relative_to(ROOT)),
+        "source_repo_list": display_path(REPOS_TXT),
         "pilot_repos": {},
     }
     all_stage1: list[dict[str, Any]] = []
@@ -400,7 +454,7 @@ def main() -> None:
         manifest["pilot_repos"][spec["repo_id"]] = {
             "repo": repo,
             "repo_url": spec["url"],
-            "local_path": str(repo_path.relative_to(ROOT)),
+            "local_path": display_path(repo_path),
             "commit": commit,
             "official_eval_count": len(by_repo_eval[repo]),
             "source_file_count": len(source_files),
@@ -417,6 +471,7 @@ def main() -> None:
     write_json(OUT_DIR / "pilot_split_manifest.json", manifest)
     write_jsonl(OUT_DIR / "target_sft_train.bootstrap.jsonl", all_stage1)
     write_jsonl(OUT_DIR / "distill_prompts.pending_teacher.jsonl", distill_prompts)
+    message_train_rows, message_dev_rows = write_training_exports(all_stage1)
 
     train_files_by_repo = {}
     for row in all_stage1:
@@ -434,11 +489,15 @@ def main() -> None:
             "data/pilot_split_manifest.json",
             "data/target_sft_train.bootstrap.jsonl",
             "data/distill_prompts.pending_teacher.jsonl",
+            "training/target_sft_train.messages.jsonl",
+            "training/target_sft_dev.messages.jsonl",
         ],
         "counts": {
             "pilot_eval_examples": len(pilot_eval),
             "target_sft_train_examples": len(all_stage1),
             "distill_prompt_examples": len(distill_prompts),
+            "message_train_examples": len(message_train_rows),
+            "message_dev_examples": len(message_dev_rows),
         },
         "leakage_check": {
             "policy": "train evidence files must not overlap extracted official eval evidence files",
@@ -459,6 +518,7 @@ def main() -> None:
         f"- Official eval examples: {len(pilot_eval)}",
         f"- Target SFT bootstrap examples: {len(all_stage1)}",
         f"- Distillation prompt examples: {len(distill_prompts)}",
+        f"- Message-only train/dev export: {len(message_train_rows)} / {len(message_dev_rows)}",
         f"- File-level leakage check passed: {report['leakage_check']['passed']}",
         "",
         "## Per Repo",

@@ -21,6 +21,7 @@ The team needs a data owner for the revised RepoSpec experiment. The relevant da
 - Parsed evidence-file references from official answers where available.
 - Built a file-level split manifest.
 - Generated Stage 1 target-SFT bootstrap data from pinned repo source.
+- Exported message-only train/dev SFT files for training code.
 - Generated Stage 2 distillation prompts without faking teacher outputs.
 - Added JSON schemas, pilot config, dataset card, QA generation prompt, and Stage 2 distillation contract.
 - Added a generated-QA filtering script for publication-quality data replacement.
@@ -34,6 +35,7 @@ Validation passed.
 
 - Official eval rows: 30
 - Target SFT bootstrap rows: 1877
+- Message-only train/dev rows: 1790 / 87
 - Distillation prompt rows: matches target SFT rows
 - File-level train/eval overlap over extracted eval evidence files: 0
 - Loss mask metadata: `assistant_only`
@@ -51,6 +53,7 @@ Fully satisfied:
 - Split manifest is real.
 - Leakage control is implemented.
 - Stage 1 JSONL exists and is consumable.
+- Message-only train/dev exports can be handed directly to a chat SFT loader.
 - Stage 2 prompt manifest exists.
 - Official SFT trajectory format is downloaded and summarized.
 - Future LLM-generated QA can be normalized and leakage-filtered with a provided script.
@@ -60,7 +63,7 @@ Fully satisfied:
 Not fully satisfiable before model training:
 
 - Actual Stage 2 teacher logits/hidden states/DFlash cache cannot be produced until target LoRA adapters are trained and frozen.
-- Publication-quality synthetic QA likely needs the team's chosen LLM generator and filtering pass. The current Stage 1 data is a deterministic bootstrap set intended for pipeline integration and smoke tests.
+- Publication-quality synthetic QA likely needs the team's chosen LLM generator and filtering pass. The current Stage 1 data is a deterministic bootstrap set intended for pipeline integration and a first target-LoRA run.
 
 ## Final Verdict
 

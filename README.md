@@ -19,17 +19,18 @@ The package covers three SWE-QA-Pro pilot repositories:
   Repo commits, local paths, extracted eval evidence files, source-file counts, training counts, and leakage policy.
 
 - `data/target_sft_train.bootstrap.jsonl`  
-  Stage 1 target-LoRA SFT bootstrap data. This is the data the target model trainer can consume first.
+  Annotated Stage 1 target-LoRA SFT bootstrap data, including evidence metadata.
 
 - `data/distill_prompts.pending_teacher.jsonl`  
   Stage 2 prompts for target-policy distillation. These are waiting for target+repo-LoRA teacher outputs.
 
-- `data/teacher_sequences.dry_run.jsonl`  
-  Three dry-run rows proving the teacher materialization script interface. Not real teacher data.
+- `training/target_sft_train.messages.jsonl` and `training/target_sft_dev.messages.jsonl`  
+  Chat-style SFT exports for training code that only wants `messages`.
 
 ### Scripts
 
 - `scripts/build_pilot_data.py` rebuilds the pilot data from local official sources.
+- `scripts/export_training_files.py` writes the train/dev message-only SFT files.
 - `scripts/validate_pilot_data.py` checks counts, schema-critical fields, loss mask metadata, and leakage.
 - `scripts/filter_generated_qa.py` filters future LLM-generated QA into the target SFT schema.
 - `scripts/materialize_teacher_sequences.py` materializes Stage 2 teacher sequences after target LoRA adapters exist.
@@ -56,6 +57,8 @@ VALIDATION PASSED
 official_eval_rows=30
 target_sft_train_rows=1877
 distill_prompt_rows=1877
+message_train_rows=1790
+message_dev_rows=87
 ```
 
 Run it again:
@@ -66,4 +69,6 @@ python3 scripts/validate_pilot_data.py
 
 ## Boundary
 
-This package completes the data artifacts that can be produced before target training. Actual Stage 2 teacher logits, hidden states, or DFlash cache cannot be included until target+repo-LoRA adapters are trained and frozen.
+This is ready for Stage 1 training smoke tests and adapter-pipeline integration. For paper numbers, the bootstrap QA should be replaced or augmented with LLM-generated QA using the same split/filtering rules.
+
+Actual Stage 2 teacher logits, hidden states, or DFlash cache cannot be included until target+repo-LoRA adapters are trained and frozen.
