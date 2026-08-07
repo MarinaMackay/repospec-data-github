@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepoSpec Official Eval Example",
+  "type": "object",
+  "required": [
+    "repo",
+    "repo_id",
+    "repo_url",
+    "commit",
+    "split",
+    "cluster",
+    "qa_type",
+    "question",
+    "gold_answer",
+    "evidence_files_extracted_from_answer",
+    "allowed_for_training",
+    "source"
+  ],
+  "properties": {
+    "repo": { "type": "string" },
+    "repo_id": { "type": "string" },
+    "repo_url": { "type": "string" },
+    "commit": { "type": "string" },
+    "split": { "const": "eval_quality_official" },
+    "cluster": { "type": "object" },
+    "qa_type": { "type": "object" },
+    "question": { "type": "string" },
+    "gold_answer": { "type": "string" },
+    "evidence_files_extracted_from_answer": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allowed_for_training": { "const": false },
+    "source": { "type": "string" }
+  }
+}

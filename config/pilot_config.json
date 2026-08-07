@@ -1,0 +1,56 @@
+{
+  "package_name": "repospec_pilot_data",
+  "created_for": "RepoSpec per-repo LoRA specialization pilot",
+  "official_sources": {
+    "swe_qa_pro_code": "https://github.com/TIGER-AI-Lab/SWE-QA-Pro",
+    "swe_qa_pro_bench": "https://huggingface.co/datasets/TIGER-Lab/SWE-QA-Pro-Bench",
+    "swe_qa_pro_sft_trajectories": "https://huggingface.co/datasets/TIGER-Lab/SWE-QA-Pro-SFT-Trajectories"
+  },
+  "pilot_repos": [
+    {
+      "repo": "pydata/xarray",
+      "repo_id": "xarray",
+      "repo_url": "https://github.com/pydata/xarray",
+      "commit": "82fd8320b1be7a434effd247baf07004b66b802f",
+      "local_path": "work/raw/repos/xarray"
+    },
+    {
+      "repo": "numba/numba",
+      "repo_id": "numba",
+      "repo_url": "https://github.com/numba/numba",
+      "commit": "6bb29300254a40d2be35a6c88906bd4ddaad2c4d",
+      "local_path": "work/raw/repos/numba"
+    },
+    {
+      "repo": "sphinx-doc/sphinx",
+      "repo_id": "sphinx",
+      "repo_url": "https://github.com/sphinx-doc/sphinx",
+      "commit": "47757c4062a6421feeaf0ae2ded89896d6cb3526",
+      "local_path": "work/raw/repos/sphinx"
+    }
+  ],
+  "splits": {
+    "target_sft_train": "Repo-grounded QA used to train target model per-repo LoRA.",
+    "distill_train": "Prompts used to query the frozen target+repo-LoRA teacher for draft training.",
+    "eval_quality_official": "Official SWE-QA-Pro held-out benchmark rows.",
+    "eval_acceptance": "Acceptance prompts/windows derived from held-out prompts for tau measurement."
+  },
+  "leakage_policy": {
+    "file_level_exclusion": true,
+    "eval_evidence_source": "paths parsed from official SWE-QA-Pro gold answers",
+    "near_duplicate_check": "available in scripts/filter_generated_qa.py for LLM-generated data"
+  },
+  "training_contract": {
+    "stage_1": {
+      "consumer": "target model LoRA trainer",
+      "input": "data/target_sft_train.bootstrap.jsonl or filtered generated QA JSONL",
+      "loss": "assistant_only"
+    },
+    "stage_2": {
+      "consumer": "draft/DFlash trainer",
+      "input_before_teacher": "data/distill_prompts.pending_teacher.jsonl",
+      "input_after_teacher": "teacher materialized JSONL/cache from target+repo-LoRA",
+      "objective": "target_policy_alignment"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "source": "TIGER-Lab/SWE-QA-Pro-SFT-Trajectories",
+  "local_path": "work/raw/SWE-QA-Pro-SFT-Trajectories/train.jsonl",
+  "row_count": 1000,
+  "first_shape": {
+    "keys": [
+      "messages",
+      "tools"
+    ],
+    "tool_count": 3,
+    "message_count": 80,
+    "first_message_roles": [
+      "system",
+      "user",
+      "assistant",
+      "tool_call",
+      "tool_response",
+      "tool_call",
+      "tool_response",
+      "assistant"
+    ]
+  },
+  "message_role_counts": {
+    "system": 1000,
+    "user": 1074,
+    "assistant": 15011,
+    "tool_call": 22963,
+    "tool_response": 22889
+  },
+  "tool_counts": {
+    "view_codebase": 1000,
+    "semantic_search": 1000,
+    "execute_readonly_command": 1000
+  },
+  "unique_repository_basenames": 999,
+  "pilot_repo_exact_basename_counts": {
+    "xarray": 0,
+    "numba": 0,
+    "sphinx": 0
+  },
+  "interpretation": "The official trajectories are useful as an agentic SFT format reference. They do not contain exact pilot repo trajectories by basename, so they should not be treated as per-repo LoRA data for xarray/numba/sphinx."
+}

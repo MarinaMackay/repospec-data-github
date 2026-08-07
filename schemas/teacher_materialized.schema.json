@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepoSpec Materialized Teacher Example",
+  "type": "object",
+  "required": [
+    "example_id",
+    "repo",
+    "repo_id",
+    "commit",
+    "target_model_id",
+    "target_adapter_id",
+    "prompt",
+    "teacher_sequence",
+    "teacher_decode_policy",
+    "training_signal"
+  ],
+  "properties": {
+    "example_id": { "type": "string" },
+    "repo": { "type": "string" },
+    "repo_id": { "type": "string" },
+    "commit": { "type": "string" },
+    "target_model_id": { "type": "string" },
+    "target_adapter_id": { "type": "string" },
+    "prompt": { "type": "string" },
+    "teacher_sequence": { "type": "string" },
+    "teacher_decode_policy": {
+      "type": "object",
+      "required": ["mode", "temperature"]
+    },
+    "training_signal": {
+      "type": "object",
+      "description": "May point to logits, hidden states, projected context features, or DFlash-native cache files."
+    }
+  }
+}

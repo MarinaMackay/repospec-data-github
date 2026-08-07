@@ -1,0 +1,28 @@
+{
+  "status": "complete_with_explicit_stage2_dependency",
+  "created_files": [
+    "data/pilot_eval.official_sweqapro.jsonl",
+    "data/pilot_split_manifest.json",
+    "data/target_sft_train.bootstrap.jsonl",
+    "data/distill_prompts.pending_teacher.jsonl"
+  ],
+  "counts": {
+    "pilot_eval_examples": 30,
+    "target_sft_train_examples": 1877,
+    "distill_prompt_examples": 1877
+  },
+  "leakage_check": {
+    "policy": "train evidence files must not overlap extracted official eval evidence files",
+    "overlaps": {
+      "xarray": [],
+      "numba": [],
+      "sphinx": []
+    },
+    "passed": true
+  },
+  "limitations": [
+    "Stage 1 QA examples are deterministic AST/docstring bootstrap examples for smoke-test training and loader integration; publication-quality synthetic QA still requires the team's chosen generator and filtering pass.",
+    "Official SWE-QA-Pro rows do not provide structured evidence files, so evidence files are extracted from answer text and may under-approximate true evidence.",
+    "Stage 2 teacher logits/hidden/cache cannot be materialized until target LoRA adapters are trained and the training owner confirms the required DFlash cache format."
+  ]
+}

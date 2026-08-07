@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepoSpec Distillation Prompt Example",
+  "type": "object",
+  "required": [
+    "repo",
+    "repo_id",
+    "commit",
+    "split",
+    "example_id",
+    "source_question_id",
+    "target_model_id",
+    "target_adapter_id",
+    "draft_model_id",
+    "prompt_template_id",
+    "prompt",
+    "reference_answer",
+    "reference_answer_usage",
+    "teacher_sequence_source",
+    "teacher_sequence",
+    "training_signal",
+    "draft_block"
+  ],
+  "properties": {
+    "repo": { "type": "string" },
+    "repo_id": { "type": "string" },
+    "commit": { "type": "string" },
+    "split": { "const": "distill_train" },
+    "example_id": { "type": "string" },
+    "source_question_id": { "type": "string" },
+    "target_model_id": { "type": "string" },
+    "target_adapter_id": { "type": "string" },
+    "draft_model_id": { "type": "string" },
+    "prompt_template_id": { "type": "string" },
+    "prompt": { "type": "string", "minLength": 10 },
+    "reference_answer": { "type": "string" },
+    "reference_answer_usage": { "const": "prompt_scaffolding_only_not_draft_ce_target" },
+    "teacher_sequence_source": { "type": "string" },
+    "teacher_sequence": { "type": ["string", "null"] },
+    "training_signal": { "type": "object" },
+    "draft_block": { "type": "object" }
+  }
+}
